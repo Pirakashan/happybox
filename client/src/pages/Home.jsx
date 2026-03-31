@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Truck, Star, Quote } from 'lucide-react';
 import exploreService from '../utils/exploreService';
-import giftService from '../utils/giftService';
+
 
 const Home = () => {
   const [categories, setCategories] = useState([]);
-  const [featuredGifts, setFeaturedGifts] = useState([]);
+
   const API_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api').replace('/api', '');
 
   useEffect(() => {
@@ -28,10 +28,7 @@ const Home = () => {
       .then(res => setCategories((Array.isArray(res) ? res : res.data || []).slice(0, 3)))
       .catch(err => console.error(err));
 
-    // Fetch featured gifts
-    giftService.getAll()
-      .then(res => setFeaturedGifts(res.filter(g => g.is_featured).slice(0, 3)))
-      .catch(err => console.error(err));
+
 
     return () => observer.disconnect();
   }, []);
@@ -99,39 +96,7 @@ const Home = () => {
 
 
 
-      {/* Customized Gifts Collection */}
-      <section className="section-padding" style={{ background: '#fff' }}>
-        <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '60px' }}>
-            <div>
-              <h6 style={{ color: 'var(--primary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '12px' }}>Our Collection</h6>
-              <h2 style={{ fontSize: '2.5rem' }}>Our Customized Gifts Collection</h2>
-            </div>
-            <Link to="/explore/customized-gift-solutions" style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none', borderBottom: '2px solid var(--primary)', paddingBottom: '4px' }}>View All Gifts</Link>
-          </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px' }}>
-            {featuredGifts.length > 0 ? (
-              featuredGifts.map((gift) => (
-                <GiftBoxItem
-                  key={gift.id}
-                  title={gift.name}
-                  price={gift.price}
-                  img={gift.image_path ? (gift.image_path.startsWith('http') ? gift.image_path : `${API_BASE}${gift.image_path}`) : 'https://via.placeholder.com/400/300?text=Gift+Box'}
-                  desc={gift.description}
-                />
-              ))
-            ) : (
-              // Fallback static gifts if none in DB yet
-              <>
-                <GiftBoxItem title="Midnight Surprise" price="5500" img="http://localhost:8000/assets/images/gifts/gift1.png" desc="A beautiful box of surprises for your loved ones." />
-                <GiftBoxItem title="Birthday Duo" price="7200" img="http://localhost:8000/assets/images/gifts/gift2.png" desc="Double the joy with our premium birthday collection." />
-                <GiftBoxItem title="Wedding Special" price="12500" img="http://localhost:8000/assets/images/gifts/gift3.png" desc="Elegant and personalized wedding gift hampers." />
-              </>
-            )}
-          </div>
-        </div>
-      </section>
 
     </div>
   );
@@ -160,18 +125,6 @@ const EventItem = ({ title, img, desc, slug }) => {
   );
 };
 
-const GiftBoxItem = ({ title, price, img, desc }) => (
-  <div className="card" style={{ background: 'white', borderRadius: 'var(--radius-lg)', padding: '24px' }}>
-    <div style={{ background: 'var(--background)', borderRadius: 'var(--radius-md)', overflow: 'hidden', marginBottom: '24px' }}>
-      <img src={img} alt={title} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
-    </div>
-    <h3 style={{ marginBottom: '8px' }}>{title}</h3>
-    <p style={{ color: '#888', fontSize: '0.9rem', marginBottom: '20px' }}>{desc}</p>
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <span style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--primary)' }}>${price}</span>
-      <button className="btn btn-primary" style={{ padding: '8px 20px', fontSize: '0.9rem' }}>Order Now</button>
-    </div>
-  </div>
-);
+
 
 export default Home;

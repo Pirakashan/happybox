@@ -3,12 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
     ChartLine, CalendarDays, Box, ShoppingCart, Settings,
     Bell, LogOut, MoreHorizontal, User, CloudUpload, Globe, Plus, Edit3,
-    Trash2, ArrowLeft, Image as ImageIcon, X, ChevronRight, FolderTree, Eye
+    Trash2, ArrowLeft, Image as ImageIcon, X, ChevronRight, FolderTree, Eye, Truck
 } from 'lucide-react';
 import authService from '../utils/authService';
 import exploreService from '../utils/exploreService';
 import ServiceManager from '../components/ServiceManager';
 import GiftManager from '../components/GiftManager';
+import DeliveryPartnerManager from '../components/DeliveryPartnerManager';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -47,9 +48,9 @@ const Dashboard = () => {
                 <div style={{ padding: '20px 0', flex: 1 }}>
                     <SidebarItem icon={<ChartLine size={20} />} label="Dashboard" active={section === 'dashboard'} onClick={() => setSection('dashboard')} />
                     <SidebarItem icon={<Globe size={20} />} label="Explore Sections" active={section === 'explore'} onClick={() => setSection('explore')} />
-                    <SidebarItem icon={<Globe size={20} />} label="Manage Services" active={section === 'services'} onClick={() => setSection('services')} />
                     <SidebarItem icon={<CalendarDays size={20} />} label="Manage Events" active={section === 'events'} onClick={() => setSection('events')} />
                     <SidebarItem icon={<Box size={20} />} label="Manage Gifts" active={section === 'gifts'} onClick={() => setSection('gifts')} />
+                    <SidebarItem icon={<Truck size={20} />} label="Delivery Partners" active={section === 'delivery'} onClick={() => setSection('delivery')} />
                     <SidebarItem icon={<Settings size={20} />} label="Settings" active={section === 'settings'} onClick={() => setSection('settings')} />
                 </div>
                 <div style={{ padding: '30px', borderTop: '1px solid #f8f9fa' }}>
@@ -173,6 +174,7 @@ const Dashboard = () => {
                     )}
                     {section === 'events' && <ManageForm section={section} setSection={setSection} />}
                     {section === 'gifts' && <GiftManager />}
+                    {section === 'delivery' && <DeliveryPartnerManager />}
                     {section === 'settings' && <SettingsSection />}
                 </div>
             </div>
@@ -536,14 +538,15 @@ const ExploreManager = () => {
 
     const typeOptions = [
         'root', 'group', 'category', 'service_group', 'service_item',
-        'gift_item', 'info_section', 'item'
+        'gift_item', 'info_section', 'item', 'delivery_partner'
     ];
 
     const typeBadgeColor = (type) => {
         const colors = {
             root: '#e3f2fd', group: '#e8f5e9', category: '#fff3e0',
             service_group: '#fce4ec', service_item: '#f3e5f5',
-            gift_item: '#fff8e1', info_section: '#e0f2f1', item: '#f5f5f5'
+            gift_item: '#fff8e1', info_section: '#e0f2f1', item: '#f5f5f5',
+            delivery_partner: '#e1f5fe'
         };
         return colors[type] || '#f5f5f5';
     };
@@ -944,13 +947,31 @@ const ExploreManager = () => {
                                                         )
                                                     )}
                                                     {col.id === 'image_path' && (
-                                                        node.image_path ? (
-                                                            <img src={getFullImageUrl(node.image_path)} alt={node.title}
-                                                                style={{ width: '140px', height: '90px', borderRadius: '6px', objectFit: 'cover' }}
-                                                                onError={(e) => e.target.style.display = 'none'} />
-                                                        ) : (
-                                                            <span style={{ color: '#999' }}>-</span>
-                                                        )
+                                                        <div 
+                                                            onClick={(e) => { e.stopPropagation(); openGallery(node); }}
+                                                            style={{ cursor: 'pointer', position: 'relative' }}
+                                                            title="Click to manage gallery"
+                                                        >
+                                                            {node.image_path ? (
+                                                                <img src={getFullImageUrl(node.image_path)} alt={node.title}
+                                                                    style={{ width: '140px', height: '90px', borderRadius: '6px', objectFit: 'cover' }}
+                                                                    onError={(e) => e.target.style.display = 'none'} />
+                                                            ) : (
+                                                                <div style={{ width: '140px', height: '90px', borderRadius: '6px', background: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>
+                                                                    <ImageIcon size={24} />
+                                                                </div>
+                                                            )}
+                                                            {node.gallery_images && node.gallery_images.length > 0 && (
+                                                                <span style={{
+                                                                    position: 'absolute', bottom: '6px', right: '6px',
+                                                                    background: 'rgba(0,0,0,0.7)', color: '#fff',
+                                                                    padding: '2px 8px', borderRadius: '10px',
+                                                                    fontSize: '0.7rem', fontWeight: 700
+                                                                }}>
+                                                                    +{node.gallery_images.length} photos
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     )}
                                                     {col.id === 'type' && (
                                                         isEditing ? (
@@ -1016,7 +1037,7 @@ const ExploreManager = () => {
                                             justifyContent: 'center',
                                             gap: '8px'
                                         }}>
-                                            {!['service_item', 'gift_item', 'item', 'info_section'].includes(node.type) && (
+                                            {!['service_item', 'gift_item', 'item', 'info_section', 'delivery_partner'].includes(node.type) && (
                                                 <button
                                                     onClick={() => setCurrentParent(node.id)}
                                                     style={{
@@ -1299,13 +1320,36 @@ const ExploreManager = () => {
                                 </>
                             )}
 
-                            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                                <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}
-                                    style={{ padding: '10px 24px' }}>Cancel</button>
-                                <button type="submit" className="btn btn-primary"
-                                    style={{ padding: '10px 24px' }}>
-                                    {editNode ? 'Update' : 'Create'}
-                                </button>
+                            <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between', alignItems: 'center' }}>
+                                {editNode && (
+                                    <button 
+                                        type="button"
+                                        onClick={() => { setShowModal(false); openGallery(editNode); }}
+                                        style={{
+                                            background: '#F3E5F5',
+                                            color: '#7b1fa2',
+                                            border: 'none',
+                                            padding: '10px 20px',
+                                            borderRadius: '10px',
+                                            cursor: 'pointer',
+                                            fontSize: '0.9rem',
+                                            fontWeight: 700,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px'
+                                        }}
+                                    >
+                                        <ImageIcon size={18} /> Manage Gallery Photos
+                                    </button>
+                                )}
+                                <div style={{ display: 'flex', gap: '12px', marginLeft: 'auto' }}>
+                                    <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}
+                                        style={{ padding: '10px 24px' }}>Cancel</button>
+                                    <button type="submit" className="btn btn-primary"
+                                        style={{ padding: '10px 24px' }}>
+                                        {editNode ? 'Update' : 'Create'}
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </div>

@@ -23,7 +23,7 @@ class ExploreUsController extends Controller
      */
     public function nodeDetails($slug)
     {
-        $node = ExploreNode::with(['children.children', 'galleryImages'])->where('slug', $slug)->firstOrFail();
+        $node = ExploreNode::with(['children.children', 'children.galleryImages', 'galleryImages'])->where('slug', $slug)->firstOrFail();
 
         // Build breadcrumb path
         $breadcrumbs = [];
@@ -90,8 +90,8 @@ class ExploreUsController extends Controller
         // Prevent adding sub-items to leaf nodes
         if ($request->parent_id) {
             $parent = ExploreNode::find($request->parent_id);
-            if ($parent && in_array($parent->type, ['service_item', 'gift_item', 'item', 'info_section'])) {
-                return response()->json(['message' => 'Cannot add sub-items to a leaf item (item/service/gift). This is the final level.'], 422);
+            if ($parent && in_array($parent->type, ['service_item', 'gift_item', 'item', 'info_section', 'delivery_partner'])) {
+                return response()->json(['message' => 'Cannot add sub-items to a leaf item (item/service/gift/partner). This is the final level.'], 422);
             }
         }
 

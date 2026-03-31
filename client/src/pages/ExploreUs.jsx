@@ -5,10 +5,157 @@ import {
     ChevronRight, CheckCircle2, Image as ImageIcon, MapPin, Users,
     Camera, Music, Mic2, Plane, Hotel, Truck, Star, Heart,
     Calendar, Award, PartyPopper, Building2, Briefcase,
-    PenTool, Palette, Layers, Maximize, Droplet, Package
+    PenTool, Palette, Layers, Maximize, Droplet, Package,
+    ChevronLeft, Bike, Box, Shield
 } from 'lucide-react';
 import exploreService from '../utils/exploreService';
 import giftService from '../utils/giftService';
+
+// Carousel Component
+const Carousel = ({ items, renderItem }) => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [isAnimating, setIsAnimating] = useState(false);
+
+    const next = () => {
+        if (isAnimating) return;
+        setIsAnimating(true);
+        setCurrentIndex((prev) => (prev + 1) % items.length);
+        setTimeout(() => setIsAnimating(false), 500);
+    };
+
+    const prev = () => {
+        if (isAnimating) return;
+        setIsAnimating(true);
+        setCurrentIndex((prev) => (prev - 1 + items.length) % items.length);
+        setTimeout(() => setIsAnimating(false), 500);
+    };
+
+    useEffect(() => {
+        const timer = setInterval(next, 5000);
+        return () => clearInterval(timer);
+    }, [currentIndex, items.length]);
+
+    if (!items || items.length === 0) return null;
+
+    return (
+        <div style={{ position: 'relative', width: '100%', maxWidth: '900px', margin: '0 auto', overflow: 'hidden', padding: '0 60px' }}>
+            <div style={{
+                display: 'flex',
+                transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: `translateX(-${currentIndex * 100}%)`
+            }}>
+                {items.map((item, idx) => (
+                    <div key={idx} style={{ minWidth: '100%', padding: '0 15px' }}>
+                        {renderItem(item, idx)}
+                    </div>
+                ))}
+            </div>
+            
+            <button 
+                onClick={prev} 
+                style={{ 
+                    position: 'absolute', left: '0', top: '50%', transform: 'translateY(-50%)', 
+                    background: '#fff', border: 'none', borderRadius: '50%', width: '50px', height: '50px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', zIndex: 10, boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                    color: 'var(--primary)', transition: 'all 0.3s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'translateY(-50%) scale(1)'}
+            >
+                <ChevronLeft size={28} />
+            </button>
+            
+            <button 
+                onClick={next} 
+                style={{ 
+                    position: 'absolute', right: '0', top: '50%', transform: 'translateY(-50%)', 
+                    background: '#fff', border: 'none', borderRadius: '50%', width: '50px', height: '50px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', zIndex: 10, boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                    color: 'var(--primary)', transition: 'all 0.3s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'translateY(-50%) scale(1)'}
+            >
+                <ChevronRight size={28} />
+            </button>
+            
+            <div style={{ position: 'absolute', bottom: '-40px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '12px', marginTop: '20px' }}>
+                {items.map((_, idx) => (
+                    <div 
+                        key={idx} 
+                        onClick={() => setCurrentIndex(idx)} 
+                        style={{ 
+                            width: currentIndex === idx ? '24px' : '8px', 
+                            height: '8px', 
+                            borderRadius: '10px', 
+                            background: currentIndex === idx ? 'var(--primary)' : '#ddd', 
+                            cursor: 'pointer',
+                            transition: 'all 0.3s'
+                        }} 
+                    />
+                ))}
+            </div>
+            <div style={{ marginBottom: '60px' }}></div>
+        </div>
+    );
+};
+
+// Sub-slideshow for multiple images within a card
+const ImageCarousel = ({ images }) => {
+    const [imgIdx, setImgIdx] = useState(0);
+
+    useEffect(() => {
+        if (images.length <= 1) return;
+        const timer = setInterval(() => {
+            setImgIdx((prev) => (prev + 1) % images.length);
+        }, 3000);
+        return () => clearInterval(timer);
+    }, [images.length]);
+
+    if (!images || images.length === 0) return null;
+
+    return (
+        <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+            {images.map((img, idx) => (
+                <div 
+                    key={idx} 
+                    style={{ 
+                        position: 'absolute', inset: 0, 
+                        opacity: imgIdx === idx ? 1 : 0,
+                        transform: `scale(${imgIdx === idx ? 1 : 1.1})`,
+                        transition: 'all 1s ease-in-out',
+                        zIndex: imgIdx === idx ? 1 : 0
+                    }}
+                >
+                    <img 
+                        src={img.image_path || img} 
+                        alt="Slide" 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                    />
+                </div>
+            ))}
+            {/* Overlay */}
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(0,0,0,0.1), transparent)', zIndex: 2 }}></div>
+            
+            {/* Dots */}
+            {images.length > 1 && (
+                <div style={{ position: 'absolute', bottom: '15px', left: '20px', display: 'flex', gap: '6px', zIndex: 3 }}>
+                    {images.map((_, idx) => (
+                        <div 
+                            key={idx} 
+                            style={{ 
+                                width: imgIdx === idx ? '12px' : '6px', height: '6px', 
+                                background: 'rgba(255,255,255,0.8)', borderRadius: '10px'
+                            }} 
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
 
 // Icon mapping for service groups
 const serviceGroupIcons = {
@@ -640,117 +787,7 @@ const ExploreUs = () => {
                             </div>
                         )}
 
-                        {/* Services List - Managed through DB */}
-                        <div style={{ marginTop: '80px', paddingTop: '60px', borderTop: '2px solid #f0f0f0' }}>
-                            <h2 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '50px', textAlign: 'center', color: '#1a1a1a', letterSpacing: '-0.5px' }}>
-                                Our Global Services
-                            </h2>
 
-                            <div style={{
-                                overflowX: 'auto',
-                                borderRadius: '20px',
-                                boxShadow: '0 15px 45px rgba(0,0,0,0.06)',
-                                border: '1px solid #eee',
-                                background: '#fff'
-                            }}>
-                                <table style={{
-                                    width: '100%',
-                                    borderCollapse: 'collapse',
-                                    textAlign: 'left',
-                                    minWidth: '800px'
-                                }}>
-                                    <thead>
-                                        <tr style={{ background: '#f8f9fa', borderBottom: '2px solid #eee' }}>
-                                            {(metadata?.columns || [
-                                                { id: 'no', name: 'No', width: '60px' },
-                                                { id: 'title', name: 'Name' },
-                                                { id: 'description', name: 'Description' },
-                                                { id: 'image_path', name: 'Photo', width: '150px' },
-                                                { id: 'rating', name: 'Rating', width: '100px' }
-                                            ]).filter(c => c.visible !== false).map(col => (
-                                                <th key={col.id} style={{ padding: '24px 20px', fontWeight: 710, color: '#333', width: col.width || 'auto' }}>
-                                                    {col.name}
-                                                </th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {(node.gallery_images || children || []).filter(item => item.type === 'service_item' || item.type === 'item').map((service, idx) => {
-                                            const ServiceIcon = serviceGroupIcons[service.title] || Sparkles;
-                                            const isLeaf = ['service_item', 'gift_item', 'item', 'info_section'].includes(service.type);
-                                            return (
-                                                <tr
-                                                    key={service.id}
-                                                    onClick={() => !isLeaf && navigate(`/explore/${service.slug}`)}
-                                                    style={{
-                                                        borderBottom: '1px solid #efefef',
-                                                        cursor: isLeaf ? 'default' : 'pointer',
-                                                        transition: 'all 0.2s ease',
-                                                        background: idx % 2 === 0 ? '#fff' : '#fafafa'
-                                                    }}
-                                                    onMouseEnter={(e) => {
-                                                        if (!isLeaf) e.currentTarget.style.background = '#fef9f3';
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        if (!isLeaf) e.currentTarget.style.background = idx % 2 === 0 ? '#fff' : '#fafafa';
-                                                    }}
-                                                >
-                                                    {(metadata?.columns || [
-                                                        { id: 'no', name: 'No' },
-                                                        { id: 'title', name: 'Name' },
-                                                        { id: 'description', name: 'Description' },
-                                                        { id: 'image_path', name: 'Photo' },
-                                                        { id: 'rating', name: 'Rating' }
-                                                    ]).filter(c => c.visible !== false).map(col => (
-                                                        <td key={col.id} style={{ padding: '20px', verticalAlign: 'middle' }}>
-                                                            {col.id === 'no' ? (
-                                                                <span style={{ color: '#666', fontWeight: 500 }}>{idx + 1}</span>
-                                                            ) : col.id === 'title' ? (
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                                                                    <div style={{
-                                                                        width: '36px', height: '36px',
-                                                                        background: '#FFF3E0', borderRadius: '10px',
-                                                                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-                                                                    }}>
-                                                                        <ServiceIcon size={18} color="var(--primary)" />
-                                                                    </div>
-                                                                    <div style={{ fontWeight: 700, color: '#1a1a1a', fontSize: '1.05rem' }}>{service.title}</div>
-                                                                </div>
-                                                            ) : col.id === 'description' ? (
-                                                                <div style={{ color: '#555', lineHeight: '1.6', fontSize: '0.95rem' }}>
-                                                                    {service.description || 'Professional services tailored for your needs.'}
-                                                                </div>
-                                                            ) : col.id === 'image_path' ? (
-                                                                service.image_path ? (
-                                                                    <div style={{ width: '140px', height: '90px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #eee' }}>
-                                                                        <img src={getFullImageUrl(service.image_path)} alt={service.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                                    </div>
-                                                                ) : (
-                                                                    <span style={{ color: '#ccc', fontStyle: 'italic', fontSize: '0.85rem' }}>No photo</span>
-                                                                )
-                                                            ) : col.id === 'rating' ? (
-                                                                service.rating ? (
-                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#d4a373', fontWeight: 700 }}>
-                                                                        <Star size={16} fill="#d4a373" />
-                                                                        <span>{parseFloat(service.rating).toFixed(1)}</span>
-                                                                    </div>
-                                                                ) : (
-                                                                    <span style={{ color: '#ccc', fontSize: '0.85rem' }}>-</span>
-                                                                )
-                                                            ) : (
-                                                                <div style={{ color: '#555', fontSize: '0.95rem' }}>
-                                                                    {service.metadata?.[col.id] || '-'}
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                    ))}
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
                     </div>
                 </section>
             </div>
@@ -989,92 +1026,179 @@ const ExploreUs = () => {
                             </p>
                         </div>
 
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                            gap: '30px', marginBottom: '60px'
-                        }}>
-                            {[
-                                { title: 'Custom Shopping', desc: 'Personal shoppers source items as per your specifications', img: '/api/placeholder/300/200' },
-                                { title: 'Global Sourcing', desc: 'Access to markets worldwide for unique finds', img: '/api/placeholder/300/200' },
-                                { title: 'Quality Assurance', desc: 'Rigorous checking before shipping', img: '/api/placeholder/300/200' },
-                                { title: 'Cultural Items', desc: 'Authentic local products and specialties', img: '/api/placeholder/300/200' },
-                                { title: 'Bulk Purchases', desc: 'Large orders handled efficiently', img: '/api/placeholder/300/200' },
-                                { title: 'Gift Procurement', desc: 'Curated gifts for special occasions', img: '/api/placeholder/300/200' }
-                            ].map((item, i) => (
-                                <div key={i} style={{
-                                    background: '#fff', borderRadius: '16px',
-                                    overflow: 'hidden', boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
-                                    opacity: animateCards ? 1 : 0,
-                                    transform: animateCards ? 'translateY(0)' : 'translateY(20px)',
-                                    transition: `all 0.5s ease ${i * 0.1}s`
+                        <div style={{ marginBottom: '80px' }}>
+                            {metadata?.display_type === 'slideshow' || slug === 'personal-shopping-international-delivery' ? (
+                                <Carousel 
+                                    items={(children && children.length > 0) ? children.filter(c => c.type !== 'delivery_partner') : [
+                                        { title: 'Custom Shopping', description: 'Personal shoppers source items as per your specifications', image_path: '/api/placeholder/300/200' },
+                                        { title: 'Global Sourcing', description: 'Access to markets worldwide for unique finds', image_path: '/api/placeholder/300/200' },
+                                        { title: 'Quality Assurance', description: 'Rigorous checking before shipping', image_path: '/api/placeholder/300/200' },
+                                        { title: 'Cultural Items', description: 'Authentic local products and specialties', image_path: '/api/placeholder/300/200' },
+                                        { title: 'Bulk Purchases', description: 'Large orders handled efficiently', image_path: '/api/placeholder/300/200' },
+                                        { title: 'Gift Procurement', description: 'Curated gifts for special occasions', image_path: '/api/placeholder/300/200' }
+                                    ]}
+                                    renderItem={(item, i) => (
+                                        <div style={{
+                                            background: '#fff', borderRadius: '24px',
+                                            overflow: 'hidden', boxShadow: '0 15px 45px rgba(0,0,0,0.1)',
+                                            display: 'grid', gridTemplateColumns: '1fr 1fr',
+                                            height: '400px', width: '100%',
+                                            animation: 'fadeIn 0.5s ease-out'
+                                        }}>
+                                            <div style={{ position: 'relative', overflow: 'hidden' }}>
+                                                {item.gallery_images && item.gallery_images.length > 0 ? (
+                                                    <ImageCarousel 
+                                                        images={item.gallery_images.map(img => getFullImageUrl(img.image_path))} 
+                                                    />
+                                                ) : (
+                                                    <>
+                                                        <img 
+                                                            src={getFullImageUrl(item.image_path || item.img)} 
+                                                            alt={item.title} 
+                                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                                                        />
+                                                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(0,0,0,0.1), transparent)' }}></div>
+                                                    </>
+                                                )}
+                                            </div>
+                                            <div style={{ padding: '50px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                                <div style={{ width: '40px', height: '4px', background: 'var(--primary)', marginBottom: '24px', borderRadius: '2px' }}></div>
+                                                <h3 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '20px', color: '#1a1a1a', letterSpacing: '-0.5px' }}>{item.title}</h3>
+                                                <p style={{ color: '#555', fontSize: '1.15rem', lineHeight: 1.8, marginBottom: '30px' }}>
+                                                    {item.description || item.desc}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+                                />
+                            ) : (
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                                    gap: '30px'
                                 }}>
-                                    <img src={item.img} alt={item.title} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
-                                    <div style={{ padding: '24px' }}>
-                                        <h3 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '8px' }}>{item.title}</h3>
-                                        <p style={{ color: '#666', fontSize: '0.95rem', lineHeight: 1.6 }}>{item.desc}</p>
-                                    </div>
+                                    {(children && children.length > 0 ? children : [
+                                        { title: 'Custom Shopping', description: 'Personal shoppers source items as per your specifications', image_path: '/api/placeholder/300/200' },
+                                        { title: 'Global Sourcing', description: 'Access to markets worldwide for unique finds', image_path: '/api/placeholder/300/200' },
+                                        { title: 'Quality Assurance', description: 'Rigorous checking before shipping', image_path: '/api/placeholder/300/200' },
+                                        { title: 'Cultural Items', description: 'Authentic local products and specialties', image_path: '/api/placeholder/300/200' },
+                                        { title: 'Bulk Purchases', description: 'Large orders handled efficiently', image_path: '/api/placeholder/300/200' },
+                                        { title: 'Gift Procurement', description: 'Curated gifts for special occasions', image_path: '/api/placeholder/300/200' }
+                                    ]).map((item, i) => (
+                                        <div key={i} style={{
+                                            background: '#fff', borderRadius: '16px',
+                                            overflow: 'hidden', boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
+                                            opacity: animateCards ? 1 : 0,
+                                            transform: animateCards ? 'translateY(0)' : 'translateY(20px)',
+                                            transition: `all 0.5s ease ${i * 0.1}s`
+                                        }}>
+                                            <img src={getFullImageUrl(item.image_path || item.img)} alt={item.title} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
+                                            <div style={{ padding: '24px' }}>
+                                                <h3 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '8px' }}>{item.title}</h3>
+                                                <p style={{ color: '#666', fontSize: '0.95rem', lineHeight: 1.6 }}>{item.description || item.desc}</p>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
+                            )}
                         </div>
 
                         <div style={{ marginBottom: '60px' }}>
-                            <h2 style={{ fontSize: '2.5rem', textAlign: 'center', marginBottom: '40px' }}>International Delivery with Arul Global Express</h2>
                             <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-                                gap: '30px'
+                                background: '#fff', borderRadius: '24px', padding: '40px',
+                                boxShadow: '0 12px 40px rgba(0,0,0,0.06)',
+                                border: '1px solid #f0f0f0',
+                                textAlign: 'center'
                             }}>
-                                <div style={{
-                                    background: '#fff', borderRadius: '16px', padding: '30px',
-                                    boxShadow: '0 8px 30px rgba(0,0,0,0.08)'
+                                <h3 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '40px', color: '#1a1a1a', letterSpacing: '-0.5px' }}>
+                                    Delivery Partners & Services
+                                </h3>
+                                
+                                <div style={{ 
+                                    display: 'grid', 
+                                    gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', 
+                                    gap: '30px',
+                                    justifyContent: 'center'
                                 }}>
-                                    <h3 style={{ fontSize: '1.5rem', marginBottom: '20px' }}>How We Deliver</h3>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <CheckCircle2 size={20} color="var(--primary)" />
-                                            <span>Secure packaging for international shipping</span>
+                                    {((children && children.length > 0 && children.some(c => c.type === 'delivery_partner')) 
+                                        ? children.filter(c => c.type === 'delivery_partner') 
+                                        : [
+                                            { title: 'PickMe Flash', icon: <Bike size={32} />, description: 'Instant motorcycle delivery within city limits.' },
+                                            { title: 'Uber Connect', icon: <Globe size={32} />, description: 'Real-time tracked parcel sending.' },
+                                            { title: 'Pronto', icon: <Truck size={32} />, description: 'Leading island-wide courier with tracking.' },
+                                            { title: 'Domex', icon: <Package size={32} />, description: 'Extensive delivery network for all parcel sizes.' }
+                                        ]
+                                    ).map((p, idx) => (
+                                        <div key={idx} style={{ position: 'relative', cursor: 'pointer' }} className="shop-icon-container">
+                                            <div 
+                                                style={{ 
+                                                    background: '#f8f9fa', borderRadius: '24px', padding: '30px',
+                                                    border: '1px solid #eee', transition: 'all 0.3s ease',
+                                                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.borderColor = 'var(--primary)';
+                                                    e.currentTarget.style.transform = 'translateY(-5px)';
+                                                    e.currentTarget.style.boxShadow = '0 12px 25px rgba(212,163,115,0.15)';
+                                                    e.currentTarget.style.background = '#fff';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.borderColor = '#eee';
+                                                    e.currentTarget.style.transform = 'translateY(0)';
+                                                    e.currentTarget.style.boxShadow = 'none';
+                                                    e.currentTarget.style.background = '#f8f9fa';
+                                                }}
+                                            >
+                                                <div style={{ 
+                                                    width: '80px', height: '80px', borderRadius: '20px', 
+                                                    background: '#fff', border: '1px solid #f0f0f0',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    color: 'var(--primary)', overflow: 'hidden', padding: p.image_path ? '12px' : '0'
+                                                }}>
+                                                    {p.image_path ? (
+                                                        <img src={getFullImageUrl(p.image_path)} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                                    ) : (
+                                                        p.icon || <Package size={32} />
+                                                    )}
+                                                </div>
+                                                <div style={{ fontWeight: 700, color: '#1a1a1a', fontSize: '1rem' }}>{p.title || p.name}</div>
+                                            </div>
+                                            
+                                            {/* Tooltip detail */}
+                                            {(p.description || p.detail) && (
+                                                <div className="shop-tooltip" style={{
+                                                    position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
+                                                    background: '#1a1a1a', color: '#fff', padding: '12px 16px', borderRadius: '12px',
+                                                    fontSize: '0.8rem', width: '200px', marginBottom: '15px', zIndex: 100,
+                                                    opacity: 0, visibility: 'hidden', transition: 'all 0.3s ease',
+                                                    boxShadow: '0 10px 25px rgba(0,0,0,0.2)', pointerEvents: 'none',
+                                                    textAlign: 'center'
+                                                }}>
+                                                    <div style={{ fontWeight: 700, marginBottom: '4px', color: 'var(--primary)' }}>{p.title || p.name}</div>
+                                                    <div style={{ lineHeight: 1.4, opacity: 0.9 }}>{p.description || p.detail}</div>
+                                                    <div style={{
+                                                        position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
+                                                        borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
+                                                        borderTop: '6px solid #1a1a1a'
+                                                    }}></div>
+                                                </div>
+                                            )}
                                         </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <CheckCircle2 size={20} color="var(--primary)" />
-                                            <span>Real-time tracking via Arul Global Express</span>
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <CheckCircle2 size={20} color="var(--primary)" />
-                                            <span>Customs clearance and documentation</span>
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <CheckCircle2 size={20} color="var(--primary)" />
-                                            <span>Door-to-door delivery worldwide</span>
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <CheckCircle2 size={20} color="var(--primary)" />
-                                            <span>Insurance coverage for valuable items</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div style={{
-                                    background: '#fff', borderRadius: '16px', padding: '30px',
-                                    boxShadow: '0 8px 30px rgba(0,0,0,0.08)'
-                                }}>
-                                    <h3 style={{ fontSize: '1.5rem', marginBottom: '20px' }}>Delivery Options</h3>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                        <div>
-                                            <strong>Standard Delivery:</strong> 7-14 days worldwide
-                                        </div>
-                                        <div>
-                                            <strong>Express Delivery:</strong> 3-5 days for urgent needs
-                                        </div>
-                                        <div>
-                                            <strong>Economy:</strong> Cost-effective for non-urgent items
-                                        </div>
-                                        <div>
-                                            <strong>White Glove:</strong> Premium handling for luxury items
-                                        </div>
-                                    </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>
+
+                        <style>{`
+                            .shop-icon-container:hover .shop-tooltip {
+                                opacity: 1;
+                                visibility: visible;
+                                transform: translateX(-50%) translateY(0);
+                            }
+                            .shop-tooltip {
+                                transform: translateX(-50%) translateY(10px);
+                            }
+                        `}</style>
 
                         <div style={{
                             background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
